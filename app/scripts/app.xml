@@ -5,12 +5,76 @@
   <dependencies>
       <port>/icubSim/cam/left</port>
       <port>/icubSim/cam/right</port>
-      <port>/icubSim/cartesianController/right_arm/state:o</port>      
+      <port>/icubSim/cartesianController/right_arm/state:o</port>
       <port>/iKinGazeCtrl/rpc</port>
   </dependencies>
 
-  <!-->FILL IN THE APPLICATION<-->
-  
+  <module>
+      <name>yarplogger</name>
+      <parameters>--start</parameters>
+      <node>localhost</node>
+  </module>
+
+  <module>
+      <name>make-it-roll</name>
+      <dependencies>
+         <port timeout="5">/yarplogger</port>
+      </dependencies>
+      <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+      <node>localhost</node>
+  </module>
+
+  <module>
+    <name>yarpview</name>
+    <dependencies>
+        <port timeout="20">/imgR:o</port>
+    </dependencies>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <node>localhost</node>
+    <tag>yarpView</tag>
+ </module>
+
+  <!-- Connections -->
+
+  <connection>
+        <from>/icubSim/cam/left</from>
+        <to>/imgL:i</to>
+        <protocol>tcp</protocol>
+  </connection>
+  <connection>
+        <from>/icubSim/cam/right</from>
+        <to>/imgR:i</to>
+        <protocol>tcp</protocol>
+  </connection>
+  <connection>
+        <from>/icubSim/cartesianController/right_arm</from>
+        <to>/iarm</to>
+        <protocol>tcp</protocol>
+  </connection>
+  <connection>
+        <from>/iKinGazeCtrl</from>
+        <to>/igaze</to>
+        <protocol>tcp</protocol>
+  </connection>
+  <!-- <connection>
+        <from>/imgR:o</from>
+        <to>/</to>
+        <protocol>tcp</protocol>
+  </connection>
+  <connection>
+        <from>/imgL:o</from>
+        <to></to>
+        <protocol>tcp</protocol>
+  </connection> -->
+  <!-- <connection>
+        <from>/icubSim/cam/right</from>
+        <to>/imgR:i</to>
+        <protocol>tcp</protocol>
+  </connection>
+  <connection>
+        <from>/icubSim/cam/right</from>
+        <to>/imgR:i</to>
+        <protocol>tcp</protocol>
+  </connection> -->
+
 </application>
-
-
