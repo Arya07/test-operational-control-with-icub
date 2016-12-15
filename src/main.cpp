@@ -132,11 +132,11 @@ protected:
         Vector approched_x(3);
         approched_x[0] = x[0]-0.03;
         approched_x[1] = x[1]-0.14;
-        approched_x[2] = x[2]-0.2;
+        approched_x[2] = x[2]-0.3;
 
         iarm->storeContext(&context);
         iarm->goToPoseSync(approched_x,o);   // send request and wait for reply
-        iarm->waitMotionDone(0.04, 5);  // wait until the motion is done and ping at each 0.04 seconds
+        iarm->waitMotionDone(0.04, 5);       // wait until the motion is done and ping at each 0.04 seconds
         iarm->restoreContext(context);
         yInfo("approachTargetWithHand: ball approched");
     }
@@ -153,8 +153,8 @@ protected:
         roll_x[2] = x[2];
 
         iarm->storeContext(&context);
-        iarm->setTrajTime(1); // given in seconds
-        iarm->goToPoseSync(x,o);   // send request and wait for reply
+        iarm->setTrajTime(1);           // given in seconds
+        iarm->goToPoseSync(roll_x,o);        // send request and wait for reply
         iarm->waitMotionDone(0.04, 5);  // wait until the motion is done and ping at each 0.04 seconds
         iarm->restoreContext(context);
 
@@ -172,7 +172,6 @@ protected:
         // ang[1] elevation-component [deg]
         // ang[2] vergence-component [deg]
 
-        //ang[0]+=20.0;
         ang[1]-=39.0;
 
         igaze->storeContext(&context);
@@ -208,17 +207,6 @@ protected:
     {
         yInfo("home function");
 
-        // Vector home_pose(3); // = (-0.238  0.351  0.138);
-        // home_pose[0] = -0.238;
-        // home_pose[1] =  0.351;
-        // home_pose[2] =  0.351;
-        //
-        // Vector home_rot(4); // (-0.228 -0.962  0.147  3.018);
-        // home_rot[0] = -0.228;
-        // home_rot[1] = -0.962;
-        // home_rot[2] =  0.147;
-        // home_rot[3] =  3.018;
-
         iarm->goToPoseSync(init_pose, init_rot);
         iarm->waitMotionDone(0.04,5);
         yInfo("home: arm is at home");
@@ -227,8 +215,8 @@ protected:
         igaze->waitMotionDone();
         iarm->waitMotionDone(0.04,5);
 
-        // iarm->restoreContext(startup_iarm_context_id);
-        // igaze->restoreContext(startup_igaze_context_id);
+        iarm->restoreContext(startup_iarm_context_id);
+        igaze->restoreContext(startup_igaze_context_id);
         yInfo("home: gaze is at home");
 
     }
@@ -254,13 +242,13 @@ public:
 
         Vector curDof;
         iarm->getDOF(curDof);
-        cout<<"["<<curDof.toString()<<"]"<<endl;  // [0 0 0 1 1 1 1 1 1 1] will be printed out
+        //cout<<"["<<curDof.toString()<<"]"<<endl;  // [0 0 0 1 1 1 1 1 1 1] will be printed out
         Vector newDof(3);
         newDof[0]=2;    // torso pitch: 1 => enable
         newDof[1]=1;    // torso roll:  2 => skip
         newDof[2]=2;    // torso yaw:   1 => enable
         iarm->setDOF(newDof,curDof);
-        cout<<"["<<curDof.toString()<<"]"<<endl;  // [1 0 1 1 1 1 1 1 1 1] will be printed out
+        //cout<<"["<<curDof.toString()<<"]"<<endl;  // [1 0 1 1 1 1 1 1 1 1] will be printed out
 
         Property gaze_options;
         RpcClient igaze_port;
@@ -277,7 +265,6 @@ public:
         }
         drvGaze.view(igaze);
 
-        //Store cartesian and gaze context
         iarm->storeContext(&startup_iarm_context_id);
         igaze->storeContext(&startup_igaze_context_id);
 
@@ -315,12 +302,14 @@ public:
     {
         drvArm.close();
         drvGaze.close();
-        
+
+        mutex.lock();
         imgLPortIn.close();
         imgRPortIn.close();
         imgLPortOut.close();
         imgRPortOut.close();
         rpcPort.close();
+        mutex.unlock();
         return true;
     }
 
@@ -364,7 +353,7 @@ public:
         }
         else if (cmd=="quit")
         {
-            reply.addString("quit execution..");
+            reply.addString("Bye!!");
             close();
         }
         else
@@ -383,6 +372,7 @@ public:
     bool updateModule()
     {
         //yInfo("update module begin..");
+        mutex.lock();
         // get fresh images
         ImageOf<PixelRgb> *imgL=imgLPortIn.read();
         ImageOf<PixelRgb> *imgR=imgRPortIn.read();
@@ -394,7 +384,6 @@ public:
         }
 
         // compute the center-of-mass of pixels of our color
-        mutex.lock();
         okL=getCOG(*imgL,cogL);
         okR=getCOG(*imgR,cogR);
         mutex.unlock();
