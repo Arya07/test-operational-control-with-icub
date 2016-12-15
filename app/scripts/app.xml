@@ -24,7 +24,7 @@
       <node>localhost</node>
   </module>
 
-  <module>
+  <!-- <module>
     <name>yarpview</name>
     <dependencies>
         <port timeout="20">/imgR:o</port>
@@ -32,49 +32,20 @@
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <node>localhost</node>
     <tag>yarpView</tag>
- </module>
+ </module> -->
 
   <!-- Connections -->
 
   <connection>
-        <from>/icubSim/cam/left</from>
+        <from external="true">/icubSim/cam/left</from>
         <to>/imgL:i</to>
         <protocol>tcp</protocol>
   </connection>
   <connection>
-        <from>/icubSim/cam/right</from>
+        <from external="true">/icubSim/cam/right</from>
         <to>/imgR:i</to>
         <protocol>tcp</protocol>
   </connection>
-  <connection>
-        <from>/icubSim/cartesianController/right_arm</from>
-        <to>/iarm</to>
-        <protocol>tcp</protocol>
-  </connection>
-  <connection>
-        <from>/iKinGazeCtrl</from>
-        <to>/igaze</to>
-        <protocol>tcp</protocol>
-  </connection>
-  <!-- <connection>
-        <from>/imgR:o</from>
-        <to>/</to>
-        <protocol>tcp</protocol>
-  </connection>
-  <connection>
-        <from>/imgL:o</from>
-        <to></to>
-        <protocol>tcp</protocol>
-  </connection> -->
-  <!-- <connection>
-        <from>/icubSim/cam/right</from>
-        <to>/imgR:i</to>
-        <protocol>tcp</protocol>
-  </connection>
-  <connection>
-        <from>/icubSim/cam/right</from>
-        <to>/imgR:i</to>
-        <protocol>tcp</protocol>
-  </connection> -->
+
 
 </application>
