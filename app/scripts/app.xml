@@ -24,16 +24,6 @@
       <node>localhost</node>
   </module>
 
-  <!-- <module>
-    <name>yarpview</name>
-    <dependencies>
-        <port timeout="20">/imgR:o</port>
-    </dependencies>
-    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
-    <node>localhost</node>
-    <tag>yarpView</tag>
- </module> -->
-
   <!-- Connections -->
 
   <connection>
