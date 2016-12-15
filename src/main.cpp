@@ -130,9 +130,9 @@ protected:
         int context;
 
         Vector approched_x(3);
-        approched_x[0] = x[0]-0.03;
-        approched_x[1] = x[1]-0.14;
-        approched_x[2] = x[2]-0.3;
+        approched_x[0] = x[0]+0.05;
+        approched_x[1] = x[1]-0.15;
+        approched_x[2] = x[2]-0.2;
 
         iarm->storeContext(&context);
         iarm->goToPoseSync(approched_x,o);   // send request and wait for reply
@@ -148,8 +148,8 @@ protected:
         int context;
 
         Vector roll_x = x;
-        roll_x[0] = x[0]-0.03;
-        roll_x[1] = x[1]-0.14;
+        roll_x[0] = x[0]+0.05;
+        roll_x[1] = x[1]-0.15;
         roll_x[2] = x[2];
 
         iarm->storeContext(&context);
@@ -303,13 +303,11 @@ public:
         drvArm.close();
         drvGaze.close();
 
-        mutex.lock();
         imgLPortIn.close();
         imgRPortIn.close();
         imgLPortOut.close();
         imgRPortOut.close();
         rpcPort.close();
-        mutex.unlock();
         return true;
     }
 
