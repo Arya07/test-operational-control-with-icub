@@ -38,7 +38,6 @@ protected:
     /***************************************************/
     bool getCOG(ImageOf<PixelRgb> &img, Vector &cog)
     {
-        //yInfo("getCOG function");
         int xMean=0;
         int yMean=0;
         int ct=0;
@@ -50,7 +49,6 @@ protected:
                 PixelRgb &pixel=img.pixel(x,y);
                 if ((pixel.b>5.0*pixel.r) && (pixel.b>5.0*pixel.g))
                 {
-                    //yInfo("getCOG: blu detected");
                     xMean+=x;
                     yMean+=y;
                     ct++;
@@ -63,7 +61,6 @@ protected:
             cog.resize(2);
             cog[0]=xMean/ct;
             cog[1]=yMean/ct;
-            //yInfo("cog = (%s)",cog.toString(3,3).c_str());
             return true;
         }
         else
@@ -74,12 +71,9 @@ protected:
     Vector retrieveTarget3D(const Vector &cogL, const Vector &cogR)
     {
         yInfo("retrieveTarget3D function");
-        int context;
 
-        igaze->storeContext(&context);
         Vector x;
         igaze->triangulate3DPoint(cogL,cogR,x);
-        igaze->restoreContext(context);
 
         return x;
     }
@@ -88,16 +82,13 @@ protected:
     void fixate(const Vector &x)
     {
         yInfo("fixate function");
-        int context;
 
-        igaze->storeContext(&context);
         igaze->lookAtFixationPoint(x);                  // move the gaze to the desired fixation point
         igaze->waitMotionDone();                        // wait until the operation is done
 
         Vector real;
         igaze->getFixationPoint(real);                  // retrieve the current fixation point
         cout<<"final error = "<<norm(x-real)<<endl;     // return a measure of the displacement error
-        igaze->restoreContext(context);
     }
 
     /***************************************************/
@@ -127,17 +118,14 @@ protected:
     void approachTargetWithHand(const Vector &x, const Vector &o)
     {
         yInfo("approachTargetWithHand function");
-        int context;
 
         Vector approched_x(3);
         approched_x[0] = x[0]+0.05;
         approched_x[1] = x[1]-0.15;
         approched_x[2] = x[2]-0.2;
 
-        iarm->storeContext(&context);
         iarm->goToPoseSync(approched_x,o);   // send request and wait for reply
         iarm->waitMotionDone(0.04, 5);       // wait until the motion is done and ping at each 0.04 seconds
-        iarm->restoreContext(context);
         yInfo("approachTargetWithHand: ball approched");
     }
 
@@ -145,18 +133,15 @@ protected:
     void makeItRoll(const Vector &x, const Vector &o)
     {
         yInfo("makeItRoll function");
-        int context;
 
         Vector roll_x = x;
         roll_x[0] = x[0]+0.05;
         roll_x[1] = x[1]-0.15;
         roll_x[2] = x[2];
 
-        iarm->storeContext(&context);
         iarm->setTrajTime(1);           // given in seconds
         iarm->goToPoseSync(roll_x,o);        // send request and wait for reply
         iarm->waitMotionDone(0.04, 5);  // wait until the motion is done and ping at each 0.04 seconds
-        iarm->restoreContext(context);
 
     }
 
@@ -164,7 +149,6 @@ protected:
     void look_down()
     {
         yInfo("look_down function");
-        int context;
         Vector ang(3);
         igaze->getAngles(ang);
 
@@ -174,10 +158,8 @@ protected:
 
         ang[1]-=39.0;
 
-        igaze->storeContext(&context);
         igaze->lookAtAbsAngles(ang);
         igaze->waitMotionDone();
-        igaze->restoreContext(context);
     }
 
     /***************************************************/
@@ -215,8 +197,8 @@ protected:
         igaze->waitMotionDone();
         iarm->waitMotionDone(0.04,5);
 
-        iarm->restoreContext(startup_iarm_context_id);
-        igaze->restoreContext(startup_igaze_context_id);
+        // iarm->restoreContext(startup_iarm_context_id);
+        // igaze->restoreContext(startup_igaze_context_id);
         yInfo("home: gaze is at home");
 
     }
@@ -226,8 +208,6 @@ public:
     bool configure(ResourceFinder &rf)
     {
         Property arm_options;
-        RpcClient iarm_port;
-        iarm_port.open("/iarm");
         arm_options.put("device", "cartesiancontrollerclient");
         arm_options.put("local", "/iarm");                 //local port names
         arm_options.put("remote", "/icubSim/cartesianController/right_arm");         //where we connect to
@@ -242,17 +222,13 @@ public:
 
         Vector curDof;
         iarm->getDOF(curDof);
-        //cout<<"["<<curDof.toString()<<"]"<<endl;  // [0 0 0 1 1 1 1 1 1 1] will be printed out
         Vector newDof(3);
-        newDof[0]=2;    // torso pitch: 1 => enable
-        newDof[1]=1;    // torso roll:  2 => skip
+        newDof[0]=1;    // torso pitch: 1 => enable
+        newDof[1]=2;    // torso roll:  2 => skip
         newDof[2]=2;    // torso yaw:   1 => enable
         iarm->setDOF(newDof,curDof);
-        //cout<<"["<<curDof.toString()<<"]"<<endl;  // [1 0 1 1 1 1 1 1 1 1] will be printed out
 
         Property gaze_options;
-        RpcClient igaze_port;
-        igaze_port.open("/igaze");
         gaze_options.put("device","gazecontrollerclient");
         gaze_options.put("remote","/iKinGazeCtrl");
         gaze_options.put("local","/igaze");
