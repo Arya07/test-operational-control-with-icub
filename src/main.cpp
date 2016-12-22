@@ -198,7 +198,7 @@ public:
         }
         drvArm.view(iarm);
 
-        Vector newDof(3,1.0);
+        Vector newDof(10,1.0);
         iarm->setDOF(newDof,newDof);
 
         Property gaze_options;
