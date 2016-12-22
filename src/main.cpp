@@ -87,7 +87,7 @@ protected:
         Vector real;
         igaze->getFixationPoint(real);                  // retrieve the current fixation point
         yInfo("final error = %g",norm(x-real));         // return a measure of the displacement error
-        
+
         igaze->setTrackingMode(true);
     }
 
@@ -132,12 +132,12 @@ protected:
     {
         yInfo("look_down function");
         Vector ang(3,0.0);
-        
+
         // ang[0] azimuth-component [deg]
         // ang[1] elevation-component [deg]
         // ang[2] vergence-component [deg]
-        
-        ang[1]=-40.0;        
+
+        ang[1]=-40.0;
 
         igaze->lookAtAbsAngles(ang);
         igaze->waitMotionDone();
@@ -178,8 +178,6 @@ protected:
         igaze->waitMotionDone();
         iarm->waitMotionDone(0.04,5);
 
-        // iarm->restoreContext(startup_iarm_context_id);
-        // igaze->restoreContext(startup_igaze_context_id);
         yInfo("home: gaze is at home");
     }
 
@@ -222,7 +220,7 @@ public:
 
         while (!iarm->getPose(init_pose,init_rot))
 	        Time::delay(0.1);
-        
+
         yInfo("home orientation = (%s)",init_rot.toString(3,3).c_str());
 	    yInfo("home position = (%s)",init_pose.toString(3,3).c_str());
 
@@ -251,6 +249,9 @@ public:
     /***************************************************/
     bool close()
     {
+        iarm->restoreContext(startup_iarm_context_id);
+        igaze->restoreContext(startup_igaze_context_id);
+
         drvArm.close();
         drvGaze.close();
 
