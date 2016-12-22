@@ -5,14 +5,12 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
-#include <iCub/ctrl/math.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace iCub::ctrl;
 
 
 /***************************************************/
@@ -88,23 +86,15 @@ protected:
 
         Vector real;
         igaze->getFixationPoint(real);                  // retrieve the current fixation point
-        cout<<"final error = "<<norm(x-real)<<endl;     // return a measure of the displacement error
+        yInfo("final error = %g",norm(x-real));         // return a measure of the displacement error
+        
+        igaze->setTrackingMode(true);
     }
 
     /***************************************************/
     Vector computeHandOrientation()
     {
         yInfo("computeHandOrientation function");
-        // Vector ox(4), oy(4), oz(4);
-        // ox[0]=1.0; ox[1]=0.0; ox[2]=0.0; ox[3]=-M_PI/2.0;
-        // oy[0]=0.0; oy[1]=1.0; oy[2]=0.0; oy[3]=+M_PI;
-        // oz[0]=0.0; oz[1]=0.0; oz[2]=1.0; oz[3]=M_PI/2.0;
-        //
-        // Matrix Rx=yarp::math::axis2dcm(ox);        // from axis/angle to rotation matrix notation
-        // Matrix Ry=yarp::math::axis2dcm(oy);
-        // Matrix Rz=yarp::math::axis2dcm(oz);
-        // Matrix R=Rz*Ry*Rx;                         // compose the two rotations keeping the order
-        // Vector o=yarp::math::dcm2axis(R);          // from rotation matrix back to the axis/angle notation
         Matrix R(3,3);
 
         R(0,0)= -1.0;  R(0,1)= 0.0;  R(0,2)= 0.0;
@@ -119,13 +109,11 @@ protected:
     {
         yInfo("approachTargetWithHand function");
 
-        Vector approched_x(3);
-        approched_x[0] = x[0]+0.05;
-        approched_x[1] = x[1]-0.15;
-        approched_x[2] = x[2]-0.2;
+        Vector approched_x=x;
+        approched_x[1] += 0.1;
 
         iarm->goToPoseSync(approched_x,o);   // send request and wait for reply
-        iarm->waitMotionDone(0.04, 5);       // wait until the motion is done and ping at each 0.04 seconds
+        iarm->waitMotionDone();              // wait until the motion is done
         yInfo("approachTargetWithHand: ball approched");
     }
 
@@ -134,29 +122,22 @@ protected:
     {
         yInfo("makeItRoll function");
 
-        Vector roll_x = x;
-        roll_x[0] = x[0]+0.05;
-        roll_x[1] = x[1]-0.15;
-        roll_x[2] = x[2];
-
-        iarm->setTrajTime(1);           // given in seconds
-        iarm->goToPoseSync(roll_x,o);        // send request and wait for reply
-        iarm->waitMotionDone(0.04, 5);  // wait until the motion is done and ping at each 0.04 seconds
-
+        iarm->setTrajTime(0.3);              // given in seconds
+        iarm->goToPoseSync(x,o);             // send request and wait for reply
+        iarm->waitMotionDone();              // wait until the motion is done
     }
 
     /***************************************************/
     void look_down()
     {
         yInfo("look_down function");
-        Vector ang(3);
-        igaze->getAngles(ang);
-
+        Vector ang(3,0.0);
+        
         // ang[0] azimuth-component [deg]
         // ang[1] elevation-component [deg]
         // ang[2] vergence-component [deg]
-
-        ang[1]-=39.0;
+        
+        ang[1]=-40.0;        
 
         igaze->lookAtAbsAngles(ang);
         igaze->waitMotionDone();
@@ -200,7 +181,6 @@ protected:
         // iarm->restoreContext(startup_iarm_context_id);
         // igaze->restoreContext(startup_igaze_context_id);
         yInfo("home: gaze is at home");
-
     }
 
 public:
@@ -214,19 +194,14 @@ public:
 
         drvArm.open(arm_options);
         if (!drvArm.isValid()) {
-            printf("arm Device not available.  Here are the known devices:\n");
-            printf("%s", Drivers::factory().toString().c_str());
-            return 1;
+            yError("arm Device not available.  Here are the known devices:");
+            yError("%s", Drivers::factory().toString().c_str());
+            return false;
         }
         drvArm.view(iarm);
 
-        Vector curDof;
-        iarm->getDOF(curDof);
-        Vector newDof(3);
-        newDof[0]=1;    // torso pitch: 1 => enable
-        newDof[1]=2;    // torso roll:  2 => skip
-        newDof[2]=2;    // torso yaw:   1 => enable
-        iarm->setDOF(newDof,curDof);
+        Vector newDof(3,1.0);
+        iarm->setDOF(newDof,newDof);
 
         Property gaze_options;
         gaze_options.put("device","gazecontrollerclient");
@@ -235,19 +210,19 @@ public:
 
         drvGaze.open(gaze_options);
         if (!drvGaze.isValid()) {
-            printf("gaze Device not available.  Here are the known devices:\n");
-            printf("%s", Drivers::factory().toString().c_str());
-            return 1;
+            yError("gaze Device not available.  Here are the known devices:");
+            yError("%s", Drivers::factory().toString().c_str());
+            drvArm.close();
+            return false;
         }
         drvGaze.view(igaze);
 
         iarm->storeContext(&startup_iarm_context_id);
         igaze->storeContext(&startup_igaze_context_id);
 
-        bool success = false;
-        while(!success){
-	        success=iarm->getPose(init_pose,init_rot);
-        }
+        while (!iarm->getPose(init_pose,init_rot))
+	        Time::delay(0.1);
+        
         yInfo("home orientation = (%s)",init_rot.toString(3,3).c_str());
 	    yInfo("home position = (%s)",init_pose.toString(3,3).c_str());
 
@@ -305,20 +280,21 @@ public:
             look_down();
             reply.addString("Yep! I'm looking down now!");
         }
-        else if (cmd=="make_it_roll") //roll?
+        else if (cmd=="make_it_roll")
         {
             mutex.lock();
-            ImageOf<PixelRgb> *imgL=imgLPortIn.read();
-            ImageOf<PixelRgb> *imgR=imgRPortIn.read();
+            Vector cogL=this->cogL;
+            Vector cogR=this->cogR;
+            bool go=okL && okR;
+            mutex.unlock();
 
-            if (getCOG(*imgL, cogL)&&getCOG(*imgR, cogR))
+            if (go)
             {
                 roll(cogL,cogR);
                 reply.addString("Yeah! I've made it roll like a charm!");
             }
             else
                 reply.addString("I don't see any object!");
-            mutex.unlock();
         }
         else if (cmd=="home")
         {
@@ -346,7 +322,6 @@ public:
     bool updateModule()
     {
         //yInfo("update module begin..");
-        mutex.lock();
         // get fresh images
         ImageOf<PixelRgb> *imgL=imgLPortIn.read();
         ImageOf<PixelRgb> *imgR=imgRPortIn.read();
@@ -358,6 +333,7 @@ public:
         }
 
         // compute the center-of-mass of pixels of our color
+        mutex.lock();
         okL=getCOG(*imgL,cogL);
         okR=getCOG(*imgR,cogR);
         mutex.unlock();
