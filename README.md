@@ -21,4 +21,4 @@ and the `Gaze Interface` to accomplish the following tasks:
 - To make the blue ball show up within the simulator, you have to turn on the
 **objects** flag in the [**`iCub_parts_activation.ini`**](https://github.com/robotology/icub-main/blob/master/app/simConfig/conf/iCub_parts_activation.ini#L28) file.
 
-# [How to complete the assignment](https://github.com/robotology/robotology.github.io/wiki/How-to-complete-assignments)
+# [How to complete the assignment](https://github.com/vvv-school/vvv-school.github.io/wiki/How-to-complete-assignments)
