@@ -88,7 +88,8 @@ protected:
 
         Vector real;
         igaze->getFixationPoint(real);                  // retrieve the current fixation point
-        cout<<"final error = "<<norm(x-real)<<endl;     // return a measure of the displacement error
+        yInfo("final error = %g",norm(x-real));         // return a measure of the displacement error
+        igaze->setTrackingMode(true);
     }
 
     /***************************************************/
@@ -121,11 +122,11 @@ protected:
 
         Vector approched_x(3);
         approched_x[0] = x[0]+0.05;
-        approched_x[1] = x[1]-0.15;
-        approched_x[2] = x[2]-0.2;
+        approched_x[1] = x[1]+0.10;
+        approched_x[2] = x[2];
 
         iarm->goToPoseSync(approched_x,o);   // send request and wait for reply
-        iarm->waitMotionDone(0.04, 5);       // wait until the motion is done and ping at each 0.04 seconds
+        iarm->waitMotionDone();       // wait until the motion is done and ping at each 0.04 seconds
         yInfo("approachTargetWithHand: ball approched");
     }
 
@@ -134,15 +135,18 @@ protected:
     {
         yInfo("makeItRoll function");
 
+        int context;
+
         Vector roll_x = x;
         roll_x[0] = x[0]+0.05;
-        roll_x[1] = x[1]-0.15;
+        roll_x[1] = x[1]-0.20;
         roll_x[2] = x[2];
 
-        iarm->setTrajTime(1);           // given in seconds
+        iarm->storeContext(&context);
+        iarm->setTrajTime(0.4);           // given in seconds
         iarm->goToPoseSync(roll_x,o);        // send request and wait for reply
-        iarm->waitMotionDone(0.04, 5);  // wait until the motion is done and ping at each 0.04 seconds
-
+        iarm->waitMotionDone();
+        iarm->restoreContext(context);
     }
 
     /***************************************************/
@@ -150,13 +154,15 @@ protected:
     {
         yInfo("look_down function");
         Vector ang(3);
-        igaze->getAngles(ang);
+        //igaze->getAngles(ang);
 
         // ang[0] azimuth-component [deg]
         // ang[1] elevation-component [deg]
         // ang[2] vergence-component [deg]
 
-        ang[1]-=39.0;
+        ang[0]=0;
+        ang[1]=-40;
+        ang[2]=0;
 
         igaze->lookAtAbsAngles(ang);
         igaze->waitMotionDone();
@@ -188,17 +194,28 @@ protected:
     void home()
     {
         yInfo("home function");
+        int contextIarm, contextGaze;
+        iarm->storeContext(&contextIarm);
 
+        Vector newDof(10,1.0);
+        iarm->setDOF(newDof,newDof);
+
+        iarm->setTrajTime(1);
         iarm->goToPoseSync(init_pose, init_rot);
-        iarm->waitMotionDone(0.04,5);
+        iarm->waitMotionDone();
         yInfo("home: arm is at home");
 
         igaze->lookAtAbsAngles(init_gaze);
+        igaze->storeContext(&contextGaze);
+        igaze->lookAtAbsAngles(init_gaze);
+        igaze->blockNeckPitch(0);
+        igaze->blockNeckRoll(0);
+        igaze->blockNeckYaw(0);
         igaze->waitMotionDone();
-        iarm->waitMotionDone(0.04,5);
 
-        // iarm->restoreContext(startup_iarm_context_id);
-        // igaze->restoreContext(startup_igaze_context_id);
+        iarm->restoreContext(contextIarm);
+        igaze->restoreContext(contextGaze);
+
         yInfo("home: gaze is at home");
 
     }
@@ -214,19 +231,17 @@ public:
 
         drvArm.open(arm_options);
         if (!drvArm.isValid()) {
-            printf("arm Device not available.  Here are the known devices:\n");
-            printf("%s", Drivers::factory().toString().c_str());
-            return 1;
+            yError("gaze Device not available.  Here are the known devices:");
+            yError("%s", Drivers::factory().toString().c_str());
+            drvArm.close();
+            return false;
         }
         drvArm.view(iarm);
 
-        Vector curDof;
-        iarm->getDOF(curDof);
-        Vector newDof(3);
-        newDof[0]=1;    // torso pitch: 1 => enable
-        newDof[1]=2;    // torso roll:  2 => skip
-        newDof[2]=2;    // torso yaw:   1 => enable
-        iarm->setDOF(newDof,curDof);
+        iarm->storeContext(&startup_iarm_context_id);
+
+        Vector newDof(10,1.0);
+        iarm->setDOF(newDof,newDof);
 
         Property gaze_options;
         gaze_options.put("device","gazecontrollerclient");
@@ -235,19 +250,18 @@ public:
 
         drvGaze.open(gaze_options);
         if (!drvGaze.isValid()) {
-            printf("gaze Device not available.  Here are the known devices:\n");
-            printf("%s", Drivers::factory().toString().c_str());
-            return 1;
+            yError("gaze Device not available.  Here are the known devices:");
+            yError("%s", Drivers::factory().toString().c_str());
+            drvGaze.close();
+            return false;
         }
         drvGaze.view(igaze);
 
-        iarm->storeContext(&startup_iarm_context_id);
         igaze->storeContext(&startup_igaze_context_id);
 
-        bool success = false;
-        while(!success){
-	        success=iarm->getPose(init_pose,init_rot);
-        }
+        while (!iarm->getPose(init_pose,init_rot)&& igaze->getAngles(init_gaze))
+	        Time::delay(0.1);
+
         yInfo("home orientation = (%s)",init_rot.toString(3,3).c_str());
 	    yInfo("home position = (%s)",init_pose.toString(3,3).c_str());
 
@@ -276,6 +290,9 @@ public:
     /***************************************************/
     bool close()
     {
+        iarm->restoreContext(startup_iarm_context_id);
+        igaze->restoreContext(startup_igaze_context_id);
+
         drvArm.close();
         drvGaze.close();
 
@@ -305,20 +322,27 @@ public:
             look_down();
             reply.addString("Yep! I'm looking down now!");
         }
-        else if (cmd=="make_it_roll") //roll?
+        else if (cmd=="make_it_roll")
         {
-            mutex.lock();
-            ImageOf<PixelRgb> *imgL=imgLPortIn.read();
-            ImageOf<PixelRgb> *imgR=imgRPortIn.read();
+            Vector currentCogL, currentCogR;
+	        bool currentokL, currentokR;
 
-            if (getCOG(*imgL, cogL)&&getCOG(*imgR, cogR))
+            mutex.lock();
+
+    	    currentokL = okL;
+            currentokR = okR;
+            currentCogL = cogL;
+            currentCogR = cogR;
+
+    	    mutex.unlock();
+
+            if (currentokL && currentokR)
             {
-                roll(cogL,cogR);
+                roll(currentCogL,currentCogR);
                 reply.addString("Yeah! I've made it roll like a charm!");
             }
             else
                 reply.addString("I don't see any object!");
-            mutex.unlock();
         }
         else if (cmd=="home")
         {
