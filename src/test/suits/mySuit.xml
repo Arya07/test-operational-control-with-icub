@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<suit name="my suit">
+    <description> a simple example </description>
+    <environment> --robot simulator </environment>
+
+    <!-- <fixture param="--fixture my-fixture.xml"> yarpmanager </fixture> -->
+
+    <!--
+    <test param="--from myconf.ini"> libtest1 </test>
+    -->
+    <test param=""> /home/elisa/assignements/test-operational-control-with-icub/src/test/build/lib/libmakeitrollTest-elisa.so </test>
+
+</suit>

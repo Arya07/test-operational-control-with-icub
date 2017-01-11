@@ -139,11 +139,11 @@ protected:
 
         Vector roll_x = x;
         roll_x[0] = x[0]+0.05;
-        roll_x[1] = x[1]-0.20;
+        roll_x[1] = x[1]-0.25;
         roll_x[2] = x[2];
 
         iarm->storeContext(&context);
-        iarm->setTrajTime(0.4);           // given in seconds
+        iarm->setTrajTime(0.3);           // given in seconds
         iarm->goToPoseSync(roll_x,o);        // send request and wait for reply
         iarm->waitMotionDone();
         iarm->restoreContext(context);

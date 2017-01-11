@@ -9,18 +9,18 @@
       <port>/iKinGazeCtrl/rpc</port>
   </dependencies>
 
-  <module>
+  <!-- <module>
       <name>yarplogger</name>
       <parameters>--start</parameters>
       <node>localhost</node>
-  </module>
+  </module> -->
 
   <module>
       <name>make-it-roll</name>
-      <dependencies>
+      <!-- <dependencies>
          <port timeout="5">/yarplogger</port>
       </dependencies>
-      <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+      <environment>YARP_FORWARD_LOG_ENABLE=1</environment> -->
       <node>localhost</node>
   </module>
 
@@ -36,6 +36,5 @@
         <to>/imgR:i</to>
         <protocol>tcp</protocol>
   </connection>
-
 
 </application>

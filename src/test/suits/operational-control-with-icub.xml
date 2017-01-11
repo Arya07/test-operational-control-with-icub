@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<suit name="Operational Control With iCub Test Suite">
-    <description>Testing Operational Control With iCub</description>
-    <environment>--robotname icubSim</environment>
-    <fixture param="--fixture operational-control-with-icub-fixture.xml"> yarpmanager </fixture>
-
-    <test param=""> ../usr/local/lib/Operational-control-Test.so </test>
-</suit>

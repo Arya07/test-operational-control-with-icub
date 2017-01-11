@@ -1,0 +1,67 @@
+<application>
+    <name>Make It Roll Fixture</name>
+    <description>A fixture to prepare iCub Simulator for the test cases</description>
+    <version>1.0</version>
+    <authors>
+        <author email="elisa.maiettini@iit.it">Elisa Maiettini</author>
+    </authors>
+
+    <module>
+        <name>iCub_SIM</name>
+        <node>localhost</node>
+    	<ensure>
+            <wait>30</wait>
+        </ensure> 
+    </module>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--context simCartesianControl --config no_legs.xml</parameters>
+        <node>localhost</node>
+        <dependencies>
+            <port timeout="4">/icubSim/left_arm/state:o</port>
+            <port timeout="4">/icubSim/right_arm/state:o</port>
+        </dependencies>
+    </module>
+
+    <module>
+        <name>iKinCartesianSolver</name>
+        <parameters>--context simCartesianControl --part right_arm</parameters>
+        <dependencies>
+            <port timeout="40">/icubSim/right_arm/state:o</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+    <module>
+        <name>iKinGazeCtrl</name>
+        <parameters>--from configSim.ini</parameters>
+        <dependencies>
+            <port timeout="40">/icubSim/head/state:o</port>
+            <port timeout="40">/icubSim/inertial</port>
+        </dependencies>
+        <node>localhost</node>
+    </module>
+    <module>
+        <name>make-it-roll-elisa</name>
+        <workdir></workdir>
+        <node>localhost</node>
+        <dependencies>
+            <port>/icubSim/cam/left</port>
+            <port>/icubSim/cam/right</port>
+            <port>/icubSim/cartesianController/right_arm/state:o</port>
+            <port>/iKinGazeCtrl/rpc</port>
+        </dependencies>
+    </module>
+
+    <!-- Connections -->
+    <connection>
+          <from external="true">/icubSim/cam/left</from>
+          <to>/imgL:i</to>
+          <protocol>tcp</protocol>
+    </connection>
+    <connection>
+          <from external="true">/icubSim/cam/right</from>
+          <to>/imgR:i</to>
+          <protocol>tcp</protocol>
+    </connection>
+</application>
