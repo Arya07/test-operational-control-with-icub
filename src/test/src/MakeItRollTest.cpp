@@ -48,7 +48,7 @@ void MakeItRollTest::tearDown() {
 
     portToIcubSim.close();
     RTF_TEST_REPORT("portToIcubSim closed");
-    
+
     RTF_TEST_REPORT("end of MakeItRollTest");
 
 }
@@ -102,14 +102,15 @@ void MakeItRollTest::run() {
     final_ball_pos[1]=response.get(1).asDouble();
     final_ball_pos[2]=response.get(2).asDouble();
 
+    //test if the initial and final position are different
     bool moved = false;
     for(int i = 0; i++; i<3){
         if(final_ball_pos[i]!=init_ball_pos[i]){
             moved = true;
         }
-
     }
 
+    RTF_TEST_CHECK(!moved,"Tested if the ball moved");
     RTF_TEST_FAIL_IF(!moved, "the ball is still at the initial postion!");
 
     request.clear();

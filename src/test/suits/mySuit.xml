@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <suit name="my suit">
-    <description> a simple example </description>
+    <description> Make It Roll Test Suit </description>
     <environment> --robotname icubSim </environment>
 
     <!-- <fixture param="--fixture my-fixture.xml"> yarpmanager </fixture> -->
