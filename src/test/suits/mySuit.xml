@@ -2,7 +2,7 @@
 
 <suit name="my suit">
     <description> a simple example </description>
-    <environment> --robot simulator </environment>
+    <environment> --robotname icubSim </environment>
 
     <!-- <fixture param="--fixture my-fixture.xml"> yarpmanager </fixture> -->
 

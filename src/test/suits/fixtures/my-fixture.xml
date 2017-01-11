@@ -1,5 +1,5 @@
 <application>
-    <name>Make It Roll Fixture</name>
+    <name>Make It Roll Fixture Elisa</name>
     <description>A fixture to prepare iCub Simulator for the test cases</description>
     <version>1.0</version>
     <authors>
@@ -11,7 +11,7 @@
         <node>localhost</node>
     	<ensure>
             <wait>30</wait>
-        </ensure> 
+        </ensure>
     </module>
 
     <module>

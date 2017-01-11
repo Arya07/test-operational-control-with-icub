@@ -7,12 +7,11 @@ Test case MakeItRollTest started...
 [INFO]  (MakeItRollTest) reports: checking initial ball position...
 [INFO]  (MakeItRollTest) reports: asking icubSim to look down...
 [INFO]  (MakeItRollTest) reports: asking icubSim to make the ball roll...
-[FAIL]  (MakeItRollTest) checking (!moved): the ball is still at the initial postion!
-[INFO]  (MakeItRollTest) reports: the robot can't see the ball
 [INFO]  (MakeItRollTest) reports: asking icubSim to go back home
 [INFO]  (MakeItRollTest) reports: this is the end of the test
 [INFO]  (MakeItRollTest) reports: running MakeItRollTest::teardown...
 [INFO]  (MakeItRollTest) reports: testerPort closed
-[ERROR] (MakeItRollTest) asserts error on (yarp.disconnect("/MakeItRollTest/SimWorld","/icubSim/world")) with exception: Failed to close connection to /icubSim/world
-Test case MakeItRollTest failed!
-Test suit my suit failed!
+[INFO]  (MakeItRollTest) reports: portToIcubSim closed
+[INFO]  (MakeItRollTest) reports: end of MakeItRollTest
+Test case MakeItRollTest passed!
+Test suit my suit passed!

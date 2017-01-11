@@ -143,7 +143,7 @@ protected:
         roll_x[2] = x[2];
 
         iarm->storeContext(&context);
-        iarm->setTrajTime(0.3);           // given in seconds
+        iarm->setTrajTime(0.4);           // given in seconds
         iarm->goToPoseSync(roll_x,o);        // send request and wait for reply
         iarm->waitMotionDone();
         iarm->restoreContext(context);

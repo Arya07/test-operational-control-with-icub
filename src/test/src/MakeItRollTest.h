@@ -16,7 +16,6 @@ using namespace std;
 class MakeItRollTest : public RTF::TestCase {
 
 private:
-    ResourceFinder rf;
     string makeItRollPortName, testerPortName;
     RpcClient testerPort, portToIcubSim;
     Network yarp;
